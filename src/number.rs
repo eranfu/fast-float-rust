@@ -3,70 +3,12 @@ use crate::float::Float;
 
 const MIN_19DIGIT_INT: u64 = 100_0000_0000_0000_0000;
 
-pub const INT_POW10: [u64; 16] = [
-    1,
-    10,
-    100,
-    1000,
-    10000,
-    100000,
-    1000000,
-    10000000,
-    100000000,
-    1000000000,
-    10000000000,
-    100000000000,
-    1000000000000,
-    10000000000000,
-    100000000000000,
-    1000000000000000,
-];
-
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct Number {
     pub exponent: i64,
     pub mantissa: u64,
     pub negative: bool,
     pub many_digits: bool,
-}
-
-impl Number {
-    #[inline]
-    fn is_fast_path<F: Float>(&self) -> bool {
-        F::MIN_EXPONENT_FAST_PATH <= self.exponent
-            && self.exponent <= F::MAX_EXPONENT_DISGUISED_FAST_PATH
-            && self.mantissa <= F::MAX_MANTISSA_FAST_PATH
-            && !self.many_digits
-    }
-
-    #[inline]
-    pub fn try_fast_path<F: Float>(&self) -> Option<F> {
-        if self.is_fast_path::<F>() {
-            let mut value = if self.exponent <= F::MAX_EXPONENT_FAST_PATH {
-                // normal fast path
-                let value = F::from_u64(self.mantissa);
-                if self.exponent < 0 {
-                    value / F::pow10_fast_path((-self.exponent) as _)
-                } else {
-                    value * F::pow10_fast_path(self.exponent as _)
-                }
-            } else {
-                // disguised fast path
-                let shift = self.exponent - F::MAX_EXPONENT_FAST_PATH;
-                let mantissa = self.mantissa.checked_mul(INT_POW10[shift as usize])?;
-                if mantissa > F::MAX_MANTISSA_FAST_PATH {
-                    return None;
-                }
-                F::from_u64(mantissa) * F::pow10_fast_path(F::MAX_EXPONENT_FAST_PATH as _)
-            };
-            if self.negative {
-                value = -value;
-            }
-            Some(value)
-        } else {
-            None
-        }
-    }
 }
 
 #[inline]
@@ -102,15 +44,11 @@ fn try_parse_8digits(s: &mut AsciiStr<'_>, x: &mut u64) {
     // may cause overflows, to be handled later
     if let Some(v) = s.try_read_u64() {
         if is_8digits(v) {
-            *x = x
-                .wrapping_mul(1_0000_0000)
-                .wrapping_add(parse_8digits(v));
+            *x = x.wrapping_mul(1_0000_0000).wrapping_add(parse_8digits(v));
             s.step_by(8);
             if let Some(v) = s.try_read_u64() {
                 if is_8digits(v) {
-                    *x = x
-                        .wrapping_mul(1_0000_0000)
-                        .wrapping_add(parse_8digits(v));
+                    *x = x.wrapping_mul(1_0000_0000).wrapping_add(parse_8digits(v));
                     s.step_by(8);
                 }
             }

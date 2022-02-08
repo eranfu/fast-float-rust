@@ -91,7 +91,8 @@ impl<'a> AsciiStr<'a> {
     #[inline]
     pub fn read_u64(&self) -> u64 {
         debug_assert!(self.check_len(8));
-        let src = self.ptr as *const u64;
+        #[allow(clippy::cast_ptr_alignment)]
+        let src = self.ptr.cast::<u64>();
         u64::from_le(unsafe { ptr::read_unaligned(src) })
     }
 
@@ -157,14 +158,16 @@ pub trait ByteSlice: AsRef<[u8]> + AsMut<[u8]> {
     #[inline]
     fn read_u64(&self) -> u64 {
         debug_assert!(self.as_ref().len() >= 8);
-        let src = self.as_ref().as_ptr() as *const u64;
+        #[allow(clippy::cast_ptr_alignment)]
+        let src = self.as_ref().as_ptr().cast::<u64>();
         u64::from_le(unsafe { ptr::read_unaligned(src) })
     }
 
     #[inline]
     fn write_u64(&mut self, value: u64) {
         debug_assert!(self.as_ref().len() >= 8);
-        let dst = self.as_mut().as_mut_ptr() as *mut u64;
+        #[allow(clippy::cast_ptr_alignment)]
+        let dst = self.as_mut().as_mut_ptr().cast::<u64>();
         unsafe { ptr::write_unaligned(dst, u64::to_le(value)) };
     }
 }

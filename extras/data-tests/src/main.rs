@@ -1,6 +1,5 @@
 use std::fs::{read_dir, File};
 use std::io::{BufRead, BufReader};
-use std::mem::transmute;
 use std::path::{Path, PathBuf};
 
 #[derive(Clone, Debug)]
@@ -12,8 +11,8 @@ struct TestCase {
 
 impl TestCase {
     pub fn parse(string: String) -> Self {
-        let float32 = unsafe { transmute(u32::from_str_radix(&string[5..13], 16).unwrap()) };
-        let float64 = unsafe { transmute(u64::from_str_radix(&string[14..30], 16).unwrap()) };
+        let float32 = f32::from_bits(u32::from_str_radix(&string[5..13], 16).unwrap());
+        let float64 = f64::from_bits(u64::from_str_radix(&string[14..30], 16).unwrap());
         let string = string[31..].to_string();
         Self {
             float32,
@@ -24,7 +23,7 @@ impl TestCase {
 
     fn execute_one<F: fast_float::FastFloat>(&self, expected: F) {
         let r = F::parse_float_partial(&self.string);
-        if !r.is_ok() {
+        if r.is_err() {
             dbg!(self);
             eprintln!("Failed to parse as f32: {:?}", self.string);
         }

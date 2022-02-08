@@ -13,9 +13,6 @@ pub fn parse_float<F: Float>(s: &[u8]) -> Option<(F, usize)> {
         Some(r) => r,
         None => return parse_inf_nan(s),
     };
-    if let Some(value) = num.try_fast_path::<F>() {
-        return Some((value, rest));
-    }
 
     let mut am = compute_float::<F>(num.exponent, num.mantissa);
     if num.many_digits && am != compute_float::<F>(num.exponent, num.mantissa + 1) {

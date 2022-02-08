@@ -1,4 +1,5 @@
 use core::fmt::{self, Debug};
+use std::cmp::Ordering;
 
 use crate::common::{is_8digits, parse_digits, ByteSlice};
 
@@ -86,7 +87,7 @@ impl Decimal {
         if dp < self.num_digits {
             round_up = self.digits[dp] >= 5;
             if self.digits[dp] == 5 && dp + 1 == self.num_digits {
-                round_up = self.truncated || ((dp != 0) && (1 & self.digits[dp - 1] != 0))
+                round_up = self.truncated || ((dp != 0) && (1 & self.digits[dp - 1] != 0));
             }
         }
         if round_up {
@@ -324,12 +325,18 @@ fn number_of_digits_decimal_left_shift(d: &Decimal, mut shift: usize) -> usize {
     for (i, &p5) in pow5.iter().enumerate().take(pow5_b - pow5_a) {
         if i >= d.num_digits {
             return num_new_digits - 1;
-        } else if d.digits[i] == p5 {
-            continue;
-        } else if d.digits[i] < p5 {
-            return num_new_digits - 1;
-        } else {
-            return num_new_digits;
+        }
+
+        match d.digits[i].cmp(&p5) {
+            Ordering::Less => {
+                return num_new_digits - 1;
+            }
+            Ordering::Equal => {
+                continue;
+            }
+            Ordering::Greater => {
+                return num_new_digits;
+            }
         }
     }
     num_new_digits
