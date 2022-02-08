@@ -219,13 +219,13 @@ mod tests {
         let bytes = b"01234567";
         let string = AsciiStr::new(bytes);
         let int = string.read_u64();
-        assert_eq!(int, 0x3736353433323130);
+        assert_eq!(int, 0x3736_3534_3332_3130);
 
         let int = bytes.read_u64();
-        assert_eq!(int, 0x3736353433323130);
+        assert_eq!(int, 0x3736_3534_3332_3130);
 
         let mut slc = [0u8; 8];
-        slc.write_u64(0x3736353433323130);
+        slc.write_u64(0x3736_3534_3332_3130);
         assert_eq!(&slc, bytes);
     }
 }
